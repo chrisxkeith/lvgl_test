@@ -1,0 +1,7 @@
+{
+    "sketch": "lvgl_test.ino",
+    "output": "build",
+    "configuration": "target_core=cm7,split=100_0,security=none",
+    "board": "arduino:mbed_giga:giga",
+    "port": "/dev/ttyACM0"
+}
