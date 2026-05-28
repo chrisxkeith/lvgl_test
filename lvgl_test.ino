@@ -14,8 +14,13 @@ class OLEDWrapper {
     const int   DEFAULT_FONT_SIZE = 24;
     int         currentColor = 0;
   public:
-    void clear() {
-      lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
+    void displayOff() {
+      pinMode(74, OUTPUT);
+      digitalWrite(74, LOW);
+    }
+    void displayOn() {
+      pinMode(74, OUTPUT);
+      digitalWrite(74, HIGH);
     }
     void startup() {
       delay(3000);
@@ -69,8 +74,10 @@ int counter = 0;
 unsigned long lastUpdateTime = 0;
 void loop() {
   if (millis() - lastUpdateTime > 3000) {
-    if (counter == 2) {
-      oledWrapper->clear();
+    if (counter % 2 == 0) {
+      oledWrapper->displayOff();
+    } else {
+      oledWrapper->displayOn();
     }
     lastUpdateTime = millis();
     String s("Counter: ");
