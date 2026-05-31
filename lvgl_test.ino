@@ -83,6 +83,9 @@ class OLEDWrapper {
 };
 OLEDWrapper* oledWrapper = nullptr;
 
+lv_point_precise_t line_points1[] = { {0, 0}, {WIDTH, HEIGHT} };
+lv_point_precise_t line_points2[] = { {WIDTH, 0}, {0, HEIGHT} };
+
 class App {
   private:
     int           counter = 0;
@@ -90,9 +93,9 @@ class App {
 
     void lineTest() {
       if (counter % 2 == 0) {
-        oledWrapper->drawLine(0, 0, WIDTH, HEIGHT);
+        oledWrapper->drawLines(line_points1, 2);
       } else {
-        oledWrapper->drawLine(WIDTH, 0, 0, HEIGHT);
+        oledWrapper->drawLines(line_points2, 2);
       }
     }
   public:
