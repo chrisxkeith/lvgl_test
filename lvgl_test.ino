@@ -1,3 +1,26 @@
+class Utils {
+  private:
+    static unsigned long lastPrintln;
+  public:
+    static void publish(String s) {
+      if (millis() < lastPrintln + 1000) {
+        delay(1000);
+      }
+      Serial.println(s);
+    }
+    static String msToString(unsigned long ms) {
+      int totalSeconds = ms / 1000;
+      int secs = totalSeconds % 60;
+      int minutes = (totalSeconds / 60) % 60;
+      int hours = (totalSeconds / 60) / 60;
+    
+      char buf[100];
+      sprintf(buf, "%02u:%02u:%02u", hours, minutes, secs);
+      return String(buf);
+    }
+};
+unsigned long Utils::lastPrintln = 0;
+
 #include "Arduino_H7_Video.h"
 
 #include "lvgl.h"
@@ -95,6 +118,78 @@ class OLEDWrapper {
 };
 OLEDWrapper* oledWrapper = nullptr;
 
+class Spinner {
+  private:
+    int middleX = oledWrapper->getWidth() / 2;
+    int middleY = oledWrapper->getHeight() / 2;
+    int lineLength = min(middleX, middleY);
+    int color = COLOR_WHITE;
+    int deg = 0;
+    unsigned long msWhenOn = 0;
+    unsigned long baseline = 0;
+    unsigned long lastShift = 0;
+    int incrementDegrees = 1;
+    unsigned long lastDisplayTime = 0;
+    const unsigned long DISPLAY_INTERVAL = 200; // milliseconds
+
+    void drawElapsed() {
+      unsigned long elapsed = millis() - msWhenOn;
+      String s = Utils::msToString(elapsed);
+      oledWrapper->fillRect(0, 0, 145, oledWrapper->getHeight(), COLOR_BLACK);
+      oledWrapper->display(s, 3, 0, baseline);
+      if (millis() - lastShift > 1000 * 10) {
+        baseline += 3;
+        if (baseline > oledWrapper->getHeight() - 20) {
+          baseline = 0;
+        }
+        lastShift = millis();
+      }
+    }
+
+  public:
+    Spinner(int incrementDegrees) {
+      this->incrementDegrees = incrementDegrees;
+    }
+    void reset() {
+      deg = 0;
+      color = COLOR_WHITE;
+      msWhenOn = millis();
+    }
+    void display() {
+      if (millis() - lastDisplayTime < DISPLAY_INTERVAL) {
+        return;
+      }
+      int xEnd = lineLength * cos(deg * M_PI / 180.0);
+      int yEnd = lineLength * sin(deg * M_PI / 180.0);
+
+      oledWrapper->setDrawColor(color);
+      oledWrapper->drawLine(middleX, middleY, middleX + xEnd, middleY + yEnd);
+      drawElapsed();
+      deg += incrementDegrees;
+      if (deg >= 360) {
+        deg = 0;
+        if (color == COLOR_WHITE) {
+          color = COLOR_BLACK;
+        } else {
+          color = COLOR_WHITE;
+        }
+      }
+      lastDisplayTime = millis();
+    }
+    void dump() {
+      String s("Spinner: middleX: ");
+      s.concat(middleX);
+      s.concat(", middleY: ");
+      s.concat(middleY);
+      s.concat(", lineLength: ");
+      s.concat(lineLength);
+      s.concat(", baseline: ");
+      s.concat(baseline);
+      Utils::publish(s);
+    }
+};
+Spinner spinner(5);
+
 lv_point_precise_t line_points1[] = { {0, 0}, {WIDTH, HEIGHT} };
 lv_point_precise_t line_points2[] = { {WIDTH, 0}, {0, HEIGHT} };
 
@@ -136,18 +231,19 @@ class App {
     }
   public:
     void loop() {
-      if (millis() - lastUpdateTime > 3000) {
-  /*    if (counter % 2 == 0) {
+/*     if (millis() - lastUpdateTime > 3000) {
+        if (counter % 2 == 0) {
           oledWrapper->displayOff();
         } else {
           oledWrapper->displayOn();
         }
-  */    lastUpdateTime = millis();
+      lastUpdateTime = millis();
         String s("Counter: ");
         s.concat(counter++);
         oledWrapper->display(s);
-        lineTest();
+        // lineTest();
       }
+*/      spinner.display();
       oledWrapper->handleTimer();
     }
     void setup() {
