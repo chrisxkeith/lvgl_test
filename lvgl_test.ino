@@ -6,14 +6,27 @@
 #define WIDTH     800
 #define HEIGHT    480
 Arduino_H7_Video  Display(WIDTH, HEIGHT, GigaDisplayShield);
+const int COLOR_WHITE = 0x65535;
+const int COLOR_BLACK = 0x0;
 
 class OLEDWrapper {
   private:
     lv_obj_t*   gridCell = nullptr;
-    lv_obj_t*   rightCell = nullptr;
     lv_obj_t*   screen = nullptr;
     const int   DEFAULT_FONT_SIZE = 24;
+    lv_style_t    black;
+    lv_style_t    white;
+    int         currentColor;
   public:
+    void startup() {
+      delay(3000);
+      Display.begin();
+      screen = lv_obj_create(lv_scr_act());
+      lv_obj_set_size(screen, Display.width(), Display.height());
+      setupGrid();
+      setupLineStyle(&black, 2, lv_color_black());
+      setupLineStyle(&white, 4, lv_color_white());
+    }
     void displayOff() {
       pinMode(74, OUTPUT);
       digitalWrite(74, LOW);
@@ -22,12 +35,14 @@ class OLEDWrapper {
       pinMode(74, OUTPUT);
       digitalWrite(74, HIGH);
     }
-    void startup() {
-      delay(3000);
-      Display.begin();
-      screen = lv_obj_create(lv_scr_act());
-      lv_obj_set_size(screen, Display.width(), Display.height());
-      setupGrid();
+    int getWidth() {
+      return Display.width();
+    }
+    int getHeight() {
+      return Display.height();
+    }
+    void fillRect(int x0, int y0, int x1, int y1, int color) {
+      // no op
     }
     void setupLineStyle(lv_style_t *line_style, int width, lv_color_t color) {
       lv_style_init(line_style);
@@ -54,10 +69,8 @@ class OLEDWrapper {
     void display(String s) {
       display(s, DEFAULT_FONT_SIZE, 10, 10);
     }
-    void display(String s[], int nStrings) {
-      for (int i = 0; i < nStrings; i++) {
-        display(s[i], DEFAULT_FONT_SIZE, 10, 32 + (i * 32));
-      }
+    void setDrawColor(int color) {
+      currentColor = color;
     }
     void drawLines(lv_point_precise_t line_points[], int nPoints, lv_style_t *line_style) {
       /*Create a line and apply the new style*/
@@ -66,6 +79,18 @@ class OLEDWrapper {
       lv_line_set_points(line1, line_points, nPoints);
       lv_obj_add_style(line1, line_style, 0);
       lv_obj_center(line1);
+    }
+    void drawLine(int x0, int y0, int x1, int y1) {
+      static lv_point_precise_t line_points[] = { {x0, y0}, {x1, y1} };
+      if (currentColor == COLOR_BLACK) {
+        drawLines(line_points, 2, &black);
+      } else {
+        drawLines(line_points, 2, &white);
+      }
+    }
+    void handleTimer() {
+      lv_timer_handler();
+      delay(5);
     }
 };
 OLEDWrapper* oledWrapper = nullptr;
@@ -86,17 +111,25 @@ class App {
       if (counter % 2 == 0) {
         if (draw1Black) {
           oledWrapper->drawLines(line_points1, 2, &black);
+//          oledWrapper->setDrawColor(COLOR_BLACK);
+//          oledWrapper->drawLine(0, 0, WIDTH, HEIGHT);
           draw1Black = false;
         } else {
           oledWrapper->drawLines(line_points1, 2, &white);
+//          oledWrapper->setDrawColor(COLOR_WHITE);
+//          oledWrapper->drawLine(0, 0, WIDTH, HEIGHT);
           draw1Black = true;
         }
       } else {
         if (draw2Black) {
           oledWrapper->drawLines(line_points2, 2, &black);
+//          oledWrapper->setDrawColor(COLOR_BLACK);
+//          oledWrapper->drawLine(WIDTH, 0, 0, HEIGHT);
           draw2Black = false;
         } else {
           oledWrapper->drawLines(line_points2, 2, &white);
+//          oledWrapper->setDrawColor(COLOR_WHITE);
+//          oledWrapper->drawLine(WIDTH, 0, 0, HEIGHT);
           draw2Black = true;
         }
       }
@@ -115,8 +148,7 @@ class App {
         oledWrapper->display(s);
         lineTest();
       }
-      lv_timer_handler();
-      delay(5);
+      oledWrapper->handleTimer();
     }
     void setup() {
       oledWrapper = new OLEDWrapper();
