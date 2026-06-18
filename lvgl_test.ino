@@ -95,13 +95,14 @@ class OLEDWrapper {
     void setDrawColor(int color) {
       currentColor = color;
     }
-    void drawLines(lv_point_precise_t line_points[], int nPoints, lv_style_t *line_style) {
+    lv_obj_t * drawLines(lv_point_precise_t line_points[], int nPoints, lv_style_t *line_style) {
       /*Create a line and apply the new style*/
       lv_obj_t * line1;
       line1 = lv_line_create(lv_scr_act());
       lv_line_set_points(line1, line_points, nPoints);
       lv_obj_add_style(line1, line_style, 0);
       lv_obj_center(line1);
+      return line1;
     }
     void drawLine(int x0, int y0, int x1, int y1) {
       static lv_point_precise_t line_points[] = { {x0, y0}, {x1, y1} };
@@ -201,49 +202,43 @@ class App {
     lv_style_t    white;
     bool          draw1Black = true;
     bool          draw2Black = true;
+    lv_obj_t*     line1;
+    lv_obj_t*     line2;
 
     void lineTest() {
       if (counter % 2 == 0) {
         if (draw1Black) {
-          oledWrapper->drawLines(line_points1, 2, &black);
-//          oledWrapper->setDrawColor(COLOR_BLACK);
-//          oledWrapper->drawLine(0, 0, WIDTH, HEIGHT);
+          line1 = oledWrapper->drawLines(line_points1, 2, &black);
           draw1Black = false;
         } else {
-          oledWrapper->drawLines(line_points1, 2, &white);
-//          oledWrapper->setDrawColor(COLOR_WHITE);
-//          oledWrapper->drawLine(0, 0, WIDTH, HEIGHT);
+          lv_obj_del(line1);
           draw1Black = true;
         }
       } else {
         if (draw2Black) {
-          oledWrapper->drawLines(line_points2, 2, &black);
-//          oledWrapper->setDrawColor(COLOR_BLACK);
-//          oledWrapper->drawLine(WIDTH, 0, 0, HEIGHT);
+          line2 = oledWrapper->drawLines(line_points2, 2, &black);
           draw2Black = false;
         } else {
-          oledWrapper->drawLines(line_points2, 2, &white);
-//          oledWrapper->setDrawColor(COLOR_WHITE);
-//          oledWrapper->drawLine(WIDTH, 0, 0, HEIGHT);
+          lv_obj_del(line2);
           draw2Black = true;
         }
       }
     }
   public:
     void loop() {
-/*     if (millis() - lastUpdateTime > 3000) {
-        if (counter % 2 == 0) {
+     if (millis() - lastUpdateTime > 3000) {
+/*        if (counter % 2 == 0) {
           oledWrapper->displayOff();
         } else {
           oledWrapper->displayOn();
         }
-      lastUpdateTime = millis();
+*/      lastUpdateTime = millis();
         String s("Counter: ");
         s.concat(counter++);
         oledWrapper->display(s);
-        // lineTest();
+        lineTest();
       }
-*/      spinner.display();
+//      spinner.display();
       oledWrapper->handleTimer();
     }
     void setup() {
