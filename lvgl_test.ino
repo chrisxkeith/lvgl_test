@@ -84,7 +84,7 @@ class OLEDWrapper {
       gridCell = lv_label_create(grid);
       lv_obj_set_grid_cell(gridCell, LV_GRID_ALIGN_STRETCH, 0, 1,  //column
                           LV_GRID_ALIGN_STRETCH, 0, 1);      //row
-      lv_obj_set_style_text_font(gridCell, &lv_font_montserrat_28, 0);
+      lv_obj_set_style_text_font(gridCell, &lv_font_montserrat_14, 0);
     }
     void display(String s, int textSize, uint8_t x, uint8_t y) {
       lv_label_set_text(gridCell, s.c_str());
