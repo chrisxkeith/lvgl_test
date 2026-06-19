@@ -87,6 +87,7 @@ class OLEDWrapper {
       lv_obj_set_style_text_font(gridCell, &lv_font_montserrat_14, 0);
     }
     void display(String s, int textSize, uint8_t x, uint8_t y) {
+      lv_obj_set_pos(gridCell, x, y);
       lv_label_set_text(gridCell, s.c_str());
     }
     void display(String s) {
@@ -204,6 +205,7 @@ class App {
     bool          draw2Black = true;
     lv_obj_t*     line1;
     lv_obj_t*     line2;
+    int           textY = 10;
 
     void lineTest() {
       if (counter % 2 == 0) {
@@ -233,10 +235,18 @@ class App {
           oledWrapper->displayOn();
         }
 */      lastUpdateTime = millis();
-        String s("Counter: ");
-        s.concat(counter++);
-        oledWrapper->display(s);
+        String s("Elapsed: ");
+        s.concat(Utils::msToString(lastUpdateTime));
+        s.concat("\nCounter: ");
+        s.concat(counter);
+        oledWrapper->display(s, 2, 10, textY);
+        textY += 20;
+        if (textY > oledWrapper->getHeight() - 20) {
+          textY = 10;
+        }
+        counter++;
         lineTest();
+        textTest();
       }
 //      spinner.display();
       oledWrapper->handleTimer();
